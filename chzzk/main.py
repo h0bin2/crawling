@@ -1,6 +1,9 @@
 from chzzk import Chat
 from chzzk_top20 import Top
 
+from itertools import chain
+from collections import defaultdict
+
 import requests
 import json
 import asyncio
@@ -16,13 +19,25 @@ tasks = []
 
 for name, bjid in top_list.items():
     socket = Chat(bjid)
+    socket.nickname = name
     sockets.append(socket)
     tasks.append(asyncio.ensure_future(socket.connect()))
 
-loop = asyncio.get_event_loop()
-loop.run_until_complete(asyncio.wait(tasks))
-loop.close()
+if __name__ == '__main__':
+    loop = asyncio.get_event_loop()
+    try:
+        loop.run_until_complete(asyncio.wait(tasks))
+    except KeyboardInterrupt:
+        print("종료")
+    finally:
+        print("저장 중")
+        df = pd.DataFrame()
+        for socket in sockets:
+            new = pd.DataFrame.from_dict(socket.chatting, orient='columns')
+            df = pd.concat([df, new])
+            
 
-print(sockets[0].chatting)
+        print(df['host'].unique())
+        df.to_csv(f'crawling/chzzk/data/{datetime.now(timezone("Asia/Seoul")).strftime("%Y-%m-%d_%H:%M:%S")}_chzzk.csv', index=False)
 
     

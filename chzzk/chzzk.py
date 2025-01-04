@@ -15,6 +15,7 @@ class Chzzk():
         
         self.session = requests.session()
         self.channelId = ""
+        self.nickname = ""
         
         self.accessToken = ""
         self.extraToken = ""
@@ -41,12 +42,12 @@ class Chzzk():
 
         except:
             print(f'{self.bjid} : Token not found(getToken)')
-        
-       
+
+
 class Chat(Chzzk):
     def __init__(self, bjid):
         self.socketUrl = 'wss://kr-ss1.chat.naver.com/chat'
-        self.chatting = []
+        self.chatting = {'host':[], 'channelId':[], 'nickname':[], 'msg':[], 'time':[]}
 
         super().__init__(bjid)
         super().getChannelInfo()
@@ -71,7 +72,7 @@ class Chat(Chzzk):
             if self.channelId is None:
                 return
 
-            while True:
+            while (datetime.now(timezone('Asia/Seoul')) - self.nowTime).seconds < 60:
                 now = datetime.now(timezone('Asia/Seoul'))
 
                 try:
@@ -91,8 +92,15 @@ class Chat(Chzzk):
                     for res in response['bdy']:
                         msg = res['msg']
                         nickname = json.loads(res['profile'])['nickname']
-                        self.chatting.append([self.channelId, nickname, msg, now.strftime('%Y-%m-%d_%H:%M:%S')])
-                        print(self.channelId + ' : ' + nickname + ' : ' + msg + ' - ' + now.strftime('%Y-%m-%d_%H:%M:%S'))
+                        strNow = now.strftime('%Y-%m-%d_%H:%M:%S')
+                        self.chatting['host'].append(self.nickname)
+                        self.chatting['channelId'].append(self.channelId)
+                        self.chatting['nickname'].append(nickname)
+                        self.chatting['msg'].append(msg)
+                        self.chatting['time'].append(strNow)
+                        # self.chatting.append([self.nickname, self.channelId, nickname, msg, strNow])
+                        print(f'{self.nickname}[{self.channelId}]에서 {nickname}님께서 {msg}라고 말했다. {strNow}')
+                        # print(self.channelId + ' : ' + nickname + ' : ' + msg + ' - ' + now.strftime('%Y-%m-%d_%H:%M:%S'))
                 
                 if response is None:
                     print(f"{self.channelId} 방송 종료됨.")
